@@ -92,7 +92,7 @@ class Base extends Singleton {
 	public function disablePostEditLock() {
 		if (!in_array(get_current_screen()->post_type, $this->postTypesSupported)) { return; } // Exit for unsupported post types
 		add_filter('show_post_locked_dialog', '__return_false', 999);
-		wp_enqueue_script('fce-post', plugin_dir_url(Plugin::MAIN_FILE) . 'js/post.js', array('jquery'));
+		wp_enqueue_script('fce-post', plugin_dir_url(Plugin::MAIN_FILE) . 'js/post.js', array('jquery'), false, true);
 		wp_enqueue_style('fce-conflicts', plugin_dir_url(Plugin::MAIN_FILE) . 'css/post.css');
 		add_action('pre_get_posts', function($query) { $query->set('suppress_filters', false); } );
 		add_filter('posts_where', array($this, 'filterOutOthersAutosaves'), 10, 1);
