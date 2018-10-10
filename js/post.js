@@ -24,7 +24,7 @@
 		});
 
 		// Remove old version contents from diff when copying
-		$(document).bind('copy', function(event) {
+		$(document).on('copy', function(event) {
 			if (!window.getSelection) { return; }
 			var selection = window.getSelection();
 			if (selection.rangeCount <= 0) { return; }
@@ -63,5 +63,35 @@
 				$(this).closest('.fce-diff-pair').find('.fce-diff-text').addClass('fce-diff--active');
 			}
 		});
+		
+		$('#publish').on('click', function (e) {
+
+			if(! $('#post_ID').length){
+                return true;
+            }
+            e.preventDefault();
+			e.stopImmediatePropagation();
+
+			var post_id = $('#post_ID').val();
+			var user_id = $('#user-id').val();
+            var jqxhr = $.post(
+                ajaxurl,
+                {
+                    action: 'check_saving_post',
+                    post_id: post_id,
+					user_id: user_id
+                },
+                function (data) {
+
+                    if(data.can_be_saved == false){
+                    	alert('Other user just saved this post. Wait about 10 seconds and try to save again.');
+                    }else{
+                        $('form#post').submit();
+					}
+                },
+                'json');
+
+        });
+		
 	});
 })(jQuery);

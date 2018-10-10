@@ -21,6 +21,8 @@ class Base extends Singleton {
 		// Heartbeat response is called via AJAX, so wouldn't get loaded via `load-post.php` hooks
 		// Also, high priority because needs to be applied late to override/cancel edit lock data
 		add_filter('heartbeat_received', array($this, 'filterHeartbeatResponse'), 999999, 3);
+		add_action('wp_ajax_check_saving_post', array($this, 'canPostBeSaved'));
+		add_action( 'wp_insert_post', array($this, 'disableBlock'), 99, 3 );
 
 		// Exit now if AJAX request, to hook admin-only requests after
 		if (wp_doing_ajax()) { return; }
@@ -35,6 +37,30 @@ class Base extends Singleton {
 		add_filter('wp_insert_post_data', array($this, 'checkEditConflicts'), 0, 2);
 		add_filter('admin_body_class', array($this, 'addConflictBodyClass'));
 		add_action('edit_form_top', array($this, 'outputResolutionInterface'));
+	}
+
+	public function canPostBeSaved() {
+		$can_be_saved = false;
+		$post_id      = $_POST['post_id'];
+		$user_id      = $_POST['user_id'];
+
+		if ( $post_id > 0 && $user_id > 0) {
+			$transient = 'fce_last_saved_' . $post_id;
+
+			$last_save = get_transient( $transient );
+
+			if(!$last_save || $user_id == $last_save){
+				set_transient( $transient, $user_id, 60 );
+				$can_be_saved = true;
+			}
+		}
+
+		wp_send_json(array('can_be_saved'=> $can_be_saved ));
+	}
+
+	function disableBlock( $post_id, $post, $update ) {
+		$transient = 'fce_last_saved_' . $post_id;
+		delete_transient( $transient );
 	}
 
 	// Cache supported post types
