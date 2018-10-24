@@ -23,6 +23,14 @@ class Base extends Singleton {
 		add_filter('heartbeat_received', array($this, 'filterHeartbeatResponse'), 999999, 3);
 		add_action('wp_ajax_check_saving_post', array($this, 'canPostBeSaved'));
 		add_action( 'wp_insert_post', array($this, 'disableBlock'), 99, 3 );
+		add_filter( 'heartbeat_received', 'bn_receive_heartbeat', 10, 2 );
+
+		//mark fields with speciall calss to easy access them with jquery
+		$settings = Settings::instance()->getSettings();
+		if (array_key_exists('conflict_fields_acf', $settings)) {
+			foreach ($settings['conflict_fields_acf'] as $field)
+			add_filter('acf/prepare_field/key=' . $field, array($this,'markAsMonitored'));
+        }
 
 		// Exit now if AJAX request, to hook admin-only requests after
 		if (wp_doing_ajax()) { return; }
@@ -38,6 +46,14 @@ class Base extends Singleton {
 		add_filter('admin_body_class', array($this, 'addConflictBodyClass'));
 		add_action('edit_form_top', array($this, 'outputResolutionInterface'));
 	}
+
+	public function markAsMonitored($field){
+
+	    $field['class'] .= 'fce_js_field_monitored';
+
+	    return $field;
+
+    }
 
 	public function canPostBeSaved() {
 		$can_be_saved = false;
@@ -438,6 +454,36 @@ class Base extends Singleton {
 
 		// Override and thereby disable edit lock by eliminating the data sent
 		unset($response['wp-refresh-post-lock']);
+
+
+		//save my activity
+		if ( isset( $data['multiuser_edit'] ) ) {
+
+			global $current_user;
+			get_currentuserinfo();
+
+			$transient_key      = 'fce_multiuser_' . $data['multiuser_edit']['post_id'];
+			$my_user_id         = $current_user->ID;
+			$multiuser_edit_res = array();
+			$transient = get_transient( $transient_key );
+
+			//read and analyse the transient
+			$multiuser_edit_res['other_users'] = $transient;
+			//remove my previous data
+			unset( $multiuser_edit_res['other_users'][ $my_user_id ] );
+
+
+			$transient[ $data['multiuser_edit']['user_id'] ]['focused'] = isset($data['multiuser_edit']['focused_id']) ? $data['multiuser_edit']['focused_id'] : false;
+			$transient[ $data['multiuser_edit']['user_id'] ]['fields']  = $data['multiuser_edit']['fields'];
+			$transient[ $data['multiuser_edit']['user_id'] ]['username']  = $current_user->display_name;
+
+			set_transient( $transient_key, $transient, 15 );
+
+			//receive information about the post
+			//$multiuser_edit_res = $data['multiuser_edit'];
+
+			$response['multiuser_edit_res'] = $multiuser_edit_res;
+		}
 
 		// Send back to the browser
 		return $response;
