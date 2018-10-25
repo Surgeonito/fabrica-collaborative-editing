@@ -49,7 +49,7 @@ class Base extends Singleton {
 
 	public function markAsMonitored($field){
 
-	    $field['class'] .= 'fce_js_field_monitored';
+	    $field['class'] .= 'fce_js_field_monitored fce_value_hash_'.md5($field['value']);
 
 	    return $field;
 

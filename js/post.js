@@ -116,14 +116,28 @@
             $.each(data.multiuser_edit_res.other_users, function (index, value) {
 				let user_fields = value.fields;
 
-				//reset focus markers
-                $('.fce_js_field_monitored').each(function () {
-                    $('.fce_focus_badge').remove();
-                });
+				//reset focus indicators
+				$('.fce_focus_badge').remove();
+
+                //set new focus indicator
                 if(value.focused !== false){
-                    $('#'+value.focused).addClass('fce_multiuser_focused focused_by_'+index);
-                    $('#'+value.focused).closest('.acf-field').find('.acf-label > label').append('<span class="fce_focus_badge"><b>'+value.username+'</b> is focusing here</span>');
+                	if(value.focused == 'wp_tiny_mce'){
+                        $('#wp-content-media-buttons').append('<span class="fce_focus_badge"><b>'+value.username+'</b> is focusing here</span>');
+					}else{
+                        $('#'+value.focused).closest('.acf-field').find('.acf-label > label').append('<span class="fce_focus_badge"><b>'+value.username+'</b> is focusing here</span>');
+					}
+
 				}
+
+                $('.fce_edit_badge').remove();
+                $.each(user_fields, function (index1, value1) {
+                    let db_hash = '',
+                        my_hash = '',
+                        other_users_hash = '';
+                    if(value1 != md5($('#'+index1).val())){
+                        //$('#'+index1).closest('.acf-field').find('.acf-label > label').append('<span class="fce_edit_badge"><b>'+value.username+'</b> has edited</span>');
+					}
+                });
 
             });
             
@@ -137,11 +151,22 @@
             });
 			return res;
         }
+        $(window).load( function () {
+            tinyMCE.activeEditor.on('focus',function () {
+                localStorage.tinyMCE_focused = true;
+            }).on('blur',function () {
+                localStorage.tinyMCE_focused = false;
+            });
+        });
 
         function gather_data() {
             let focused_id = $(':focus').attr('id'),
                 user_id = $('#user-id').val(),
 				post_id = $('#post_ID').val();
+
+            if(focused_id === undefined && localStorage.tinyMCE_focused){
+            	focused_id = 'wp_tiny_mce';
+			}
 
             return {
             	post_id: post_id,
