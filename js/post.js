@@ -122,7 +122,7 @@
                 });
                 if(value.focused !== false){
                     $('#'+value.focused).addClass('fce_multiuser_focused focused_by_'+index);
-                    $('#'+value.focused).closest('.acf-field').find('.acf-label > label').append('<span class="fce_focus_badge">'+value.username+'</span>');
+                    $('#'+value.focused).closest('.acf-field').find('.acf-label > label').append('<span class="fce_focus_badge"><b>'+value.username+'</b> is focusing here</span>');
 				}
 
             });
