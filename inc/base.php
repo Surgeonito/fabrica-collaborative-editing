@@ -466,9 +466,13 @@ class Base extends Singleton {
 
 		// Send the latest revision of current post which will be compared to the cached one to see if it's changed while editing
 		$latestRevision = $this->getLatestPublishedRevision($data['fce']['post_id']);
+		$acf_fields = get_field_objects($data['fce']['post_id']);
 		if ($latestRevision) {
+		    $revision_author = get_userdata($latestRevision->post_author);
 			$response['fce'] = array(
 				'last_revision_id' => $latestRevision->ID,
+				'last_revision_author' => $revision_author->display_name,
+				'acf_fields' => $acf_fields,
 				'last_revision_content' => apply_filters('the_content', $latestRevision->post_content)
 			);
 		}
@@ -483,7 +487,7 @@ class Base extends Singleton {
 			global $current_user;
 			get_currentuserinfo();
 
-			$transient_key      = 'fce_multiuser_' . $data['multiuser_edit']['post_id'];
+			$transient_key      = 'fce_multiuser_' . $data['fce']['post_id'];
 			$my_user_id         = $current_user->ID;
 			$multiuser_edit_res = array();
 			$transient = get_transient( $transient_key );

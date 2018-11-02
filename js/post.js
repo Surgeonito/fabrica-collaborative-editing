@@ -123,7 +123,7 @@ if ( typeof debounce == 'undefined' ) {
 
 		$(document).on('heartbeat-tick', function (event, data) {
 			// Check for our data, and use it.
-			if (!data.multiuser_edit_res.other_users || data.multiuser_edit_res.other_users.length == 0) {
+			if (typeof data.multiuser_edit_res.other_users === 'undefined' || data.multiuser_edit_res.other_users.length == 0) {
 				return;
 			}
             $.each(data.multiuser_edit_res.other_users, function (index, value) {
@@ -149,6 +149,22 @@ if ( typeof debounce == 'undefined' ) {
                 });
 
             });
+            if (typeof data.fce.acf_fields !== 'undefined') {
+                $.each(data.fce.acf_fields, function (acf_i, acf_obj) {
+                    let field_id = acf_obj.prefix + '-' + acf_obj.key,
+                        $field = $('#' + field_id),
+                        db_hash = $('#fce_hash_' + field_id).data('hash'),
+                        my_hash = md5($field.val());
+
+                    if (my_hash == db_hash && md5(acf_obj.value) != my_hash) {
+                        $field.closest('.acf-field').find('.acf-label > label .fce_badge').remove();
+                        $field.closest('.acf-field').find('.acf-label > label').append('<span class="fce_badge fce_info_badge">autoupdated to '+data.fce.last_revision_author+'`s version</span>');
+                        $field.val(acf_obj.value);
+                        //update db hash
+                        $('#fce_hash_' + field_id).data('hash',md5(acf_obj.value));
+                    }
+                });
+            }
             
             //console.log(data.multiuser_edit_res);
 		});
@@ -183,15 +199,13 @@ if ( typeof debounce == 'undefined' ) {
 
         function my_edit_gather_data() {
             let focused_id = $(':focus').attr('id'),
-                user_id = $('#user-id').val(),
-				post_id = $('#post_ID').val();
+                user_id = $('#user-id').val();
 
             if(focused_id === undefined && localStorage.fce_tinyMCE_focused){
             	focused_id = 'wp_tiny_mce';
 			}
 
             return {
-            	post_id: post_id,
                 focused_id: focused_id,
                 user_id: user_id,
 				modified_fields: get_modified_fileds_hashes()
