@@ -166,14 +166,19 @@ table.diff td ul li {
 
 	list-style: circle;
 }
-.fce_focus_badge {
+.fce_badge{
 	border-bottom: 4px solid #000;
 	font-weight: normal;
 	padding: 3px 10px 1px;
 	margin-left: 20px;
 	border-radius: 0px;
-	background-color: #7ecea0;
 	color: #000;
 	position: relative;
 	display: inline-block;
+}
+.fce_focus_badge {
+	background-color: #7ecea0;
+}
+.fce_edit_badge{
+	background-color: #ce977e;
 }

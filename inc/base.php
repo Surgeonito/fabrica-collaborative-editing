@@ -54,7 +54,7 @@ class Base extends Singleton {
 
 	public function mainContentHash($post){
 	    //provide hash of content from db
-		echo '<div id="fce_hash_content" data-hash="'.md5($post['post_content']).'"></div>';
+		echo '<div id="fce_hash_content" data-hash="'.md5($post->post_content).'"></div>';
     }
 
 	public function addToFieldHash($field){
@@ -495,7 +495,7 @@ class Base extends Singleton {
 
 
 			$transient[ $data['multiuser_edit']['user_id'] ]['focused'] = isset($data['multiuser_edit']['focused_id']) ? $data['multiuser_edit']['focused_id'] : false;
-			$transient[ $data['multiuser_edit']['user_id'] ]['fields']  = $data['multiuser_edit']['fields'];
+			$transient[ $data['multiuser_edit']['user_id'] ]['modified_fields']  = $data['multiuser_edit']['modified_fields'];
 			$transient[ $data['multiuser_edit']['user_id'] ]['username']  = $current_user->display_name;
 
 			set_transient( $transient_key, $transient, 15 );

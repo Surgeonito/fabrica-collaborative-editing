@@ -127,7 +127,7 @@ if ( typeof debounce == 'undefined' ) {
 				return;
 			}
             $.each(data.multiuser_edit_res.other_users, function (index, value) {
-				let user_fields = value.fields;
+				let user_fields = value.modified_fields;
 
 				//reset focus indicators
 				$('.fce_focus_badge').remove();
@@ -135,25 +135,17 @@ if ( typeof debounce == 'undefined' ) {
                 //set new focus indicator
                 if(value.focused !== false){
                 	if(value.focused == 'wp_tiny_mce'){
-                        $('#wp-content-media-buttons').append('<span class="fce_focus_badge"><b>'+value.username+'</b> is focusing here</span>');
+                        $('#wp-content-media-buttons').append('<span class="fce_badge fce_focus_badge"><b>'+value.username+'</b> is focusing here</span>');
 					}else{
-                        $('#'+value.focused).closest('.acf-field').find('.acf-label > label').append('<span class="fce_focus_badge"><b>'+value.username+'</b> is focusing here</span>');
+                        $('#'+value.focused).closest('.acf-field').find('.acf-label > label').append('<span class="fce_badge fce_focus_badge"><b>'+value.username+'</b> is focusing here</span>');
 					}
 
 				}
 
                 $('.fce_edit_badge').remove();
                 $.each(user_fields, function (index1, value1) {
-                    let db_hash = $('#fce_hash_' + index1).data('hash'),
-                        my_hash = md5($('#' + index1).val()),
-                        other_users_hash = value1,
-                        other_is_right = db_hash == other_users_hash,
-                        im_right = db_hash == my_hash,
-                        we_agree = my_hash == other_users_hash;
+                	$('#'+index1).closest('.acf-field').find('.acf-label > label').append('<span class="fce_badge fce_edit_badge"><b>'+value.username+'</b> is working on this box</span>');
 
-                    if(other_is_right && !im_right){
-                        $('#'+index1).closest('.acf-field').find('.acf-label > label').append('<span class="fce_edit_badge"><b>'+value.username+'</b> has modified this</span>');
-					}
                 });
 
             });
@@ -165,10 +157,16 @@ if ( typeof debounce == 'undefined' ) {
             window.wp.heartbeat.connectNow();
         }, 200));
 
-		function get_fileds_hashes() {
+		function get_modified_fileds_hashes() {
 			let res = {};
 			$('.fce_js_field_monitored').each(function (index) {
-				res[$(this).attr('id')] = md5($(this).val());
+				let field_id = $(this).attr('id'),
+					db_hash = $('#fce_hash_' + field_id).data('hash'),
+                    my_hash = md5($(this).val());
+
+				if(db_hash != my_hash){
+					res[field_id] = my_hash;
+                }
             });
 			return res;
         }
@@ -196,7 +194,7 @@ if ( typeof debounce == 'undefined' ) {
             	post_id: post_id,
                 focused_id: focused_id,
                 user_id: user_id,
-				fields: get_fileds_hashes()
+				modified_fields: get_modified_fileds_hashes()
             };
         }
 		
