@@ -12,6 +12,7 @@ class Base extends Singleton {
 	const DOMAIN = 'fabrica-collaborative-editing';
 
 	private $postTypesSupported = array();
+	private $fieldsHashes = array();
 
 	public function init() {
 
@@ -23,13 +24,17 @@ class Base extends Singleton {
 		add_filter('heartbeat_received', array($this, 'filterHeartbeatResponse'), 999999, 3);
 		add_action('wp_ajax_check_saving_post', array($this, 'canPostBeSaved'));
 		add_action( 'wp_insert_post', array($this, 'disableBlock'), 99, 3 );
-		add_filter( 'heartbeat_received', 'bn_receive_heartbeat', 10, 2 );
+		add_action( 'edit_form_after_title', array($this, 'mainContentHash'), 99, 1 );
+
+		add_action( 'acf/render_field', array($this, 'addToFieldHash'), 10, 1 );
+
 
 		//mark fields with speciall calss to easy access them with jquery
 		$settings = Settings::instance()->getSettings();
 		if (array_key_exists('conflict_fields_acf', $settings)) {
-			foreach ($settings['conflict_fields_acf'] as $field)
-			add_filter('acf/prepare_field/key=' . $field, array($this,'markAsMonitored'));
+			foreach ($settings['conflict_fields_acf'] as $field){
+			    add_filter('acf/prepare_field/key=' . $field, array($this,'markAsMonitored'));
+			}
         }
 
 		// Exit now if AJAX request, to hook admin-only requests after
@@ -47,9 +52,25 @@ class Base extends Singleton {
 		add_action('edit_form_top', array($this, 'outputResolutionInterface'));
 	}
 
+	public function mainContentHash($post){
+	    //provide hash of content from db
+		echo '<div id="fce_hash_content" data-hash="'.md5($post['post_content']).'"></div>';
+    }
+
+	public function addToFieldHash($field){
+		$settings = Settings::instance()->getSettings();
+		if (array_key_exists('conflict_fields_acf', $settings)) {
+			foreach ($settings['conflict_fields_acf'] as $conflict_field){
+			    if($conflict_field == $field['key']){
+			        echo '<div id="fce_hash_'.$field['id'].'" data-hash="'.md5($field['value']).'"></div>';
+			    }
+            }
+        }
+    }
+
 	public function markAsMonitored($field){
 
-	    $field['class'] .= 'fce_js_field_monitored fce_value_hash_'.md5($field['value']);
+	    $field['class'] .= 'fce_js_field_monitored';
 
 	    return $field;
 
